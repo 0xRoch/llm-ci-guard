@@ -1,12 +1,13 @@
-import { readFileSync } from "fs";
-import { Octokit } from "@octokit/rest";
+const { readFileSync } = require("fs");
+const { Octokit } = require("@octokit/rest");
 
-type Violation = {
-  rule: number | string;
-  file: string;
-  comment: string;
-  line?: number;
-};
+/**
+ * @typedef {Object} Violation
+ * @property {number | string} rule
+ * @property {string} file
+ * @property {string} comment
+ * @property {number} [line]
+ */
 
 async function main() {
   const [, , resultPath] = process.argv;
@@ -17,7 +18,8 @@ async function main() {
 
   const raw = readFileSync(resultPath, "utf8");
   const parsed = JSON.parse(raw);
-  const violations: Violation[] = Array.isArray(parsed?.violations)
+  /** @type {Violation[]} */
+  const violations = Array.isArray(parsed?.violations)
     ? parsed.violations
     : [];
 
@@ -33,7 +35,7 @@ async function main() {
   const event = eventPath
     ? JSON.parse(readFileSync(eventPath, "utf8"))
     : undefined;
-  const pullNumber: number | undefined = event?.pull_request?.number ?? event?.number;
+  const pullNumber = event?.pull_request?.number ?? event?.number;
 
   const octokit = token
     ? new Octokit({ auth: token })

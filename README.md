@@ -60,3 +60,5 @@ npx ts-node scripts/parse-result.ts path/to/result.json
 ```
 
 `parse-result.ts` can run locally using `GITHUB_TOKEN`, `GITHUB_REPOSITORY`, and `GITHUB_EVENT_PATH` environment variables to emulate the GitHub Actions context. Without them it prints the violations to stdout.
+
+> **Note:** This sandbox blocks outbound connections to the public npm registry. To keep `npm install` working, lightweight stubs for `@octokit/rest`, `ts-node`, and `typescript` are vendored under `vendor/`. They implement just enough behavior for the demo workflow while avoiding the forbidden network calls.
