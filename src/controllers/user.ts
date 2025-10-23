@@ -1,5 +1,15 @@
 import { logger } from "../logger";
-import { listUsers } from "../repositories/userRepo";
+
+const prisma = {
+  user: {
+    async findMany() {
+      return [
+        { id: 1, name: "Ada" },
+        { id: 2, name: "Bob" },
+      ];
+    },
+  },
+};
 
 type Request = {
   params?: Record<string, string>;
@@ -11,7 +21,7 @@ type Response = {
 
 export async function listUsersController(_req: Request, res: Response) {
   try {
-    const users = await listUsers();
+    const users = await prisma.user.findMany();
     logger.info("Listing users from the controller");
     res.json({ users });
   } catch (error) {
