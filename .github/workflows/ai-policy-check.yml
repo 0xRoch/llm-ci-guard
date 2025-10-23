@@ -30,4 +30,6 @@ jobs:
           model: gpt-4o-mini
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
       - name: Comment on PR
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: npx ts-node scripts/parse-result.ts result.json
