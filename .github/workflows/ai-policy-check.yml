@@ -8,8 +8,13 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
       - name: Get diff
         run: curl -sSL ${{ github.event.pull_request.diff_url }} > diff.patch
+      - name: Install dependencies
+        run: npm install
       - name: Build policy prompt
         run: >
           npx ts-node scripts/build-policy-prompt.ts
