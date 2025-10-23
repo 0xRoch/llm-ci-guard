@@ -1,4 +1,10 @@
-import { readFileSync, readdirSync, writeFileSync, mkdirSync } from "fs";
+import {
+  readFileSync,
+  readdirSync,
+  writeFileSync,
+  mkdirSync,
+  existsSync,
+} from "fs";
 import { dirname, join, resolve } from "path";
 
 interface Args {
@@ -63,7 +69,18 @@ function renderTemplate(templatePath: string): string {
       throw new Error(`Unsupported file pattern: ${filePattern}`);
     }
 
-    const targetDir = resolve(templateDir, relativeDir.trim());
+    const rawDir = relativeDir.trim();
+    const candidateDirs = [resolve(templateDir, rawDir)];
+    if (!existsSync(candidateDirs[0])) {
+      candidateDirs.push(resolve(process.cwd(), rawDir));
+    }
+
+    const targetDir = candidateDirs.find((dir) => existsSync(dir));
+    if (!targetDir) {
+      throw new Error(
+        `Unable to find directory "${rawDir}" relative to template or project root.`
+      );
+    }
 
     const files = readdirSync(targetDir)
       .filter((file) => file.endsWith(".md"))
