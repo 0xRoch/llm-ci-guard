@@ -10,13 +10,19 @@ jobs:
       - uses: actions/checkout@v4
       - name: Get diff
         run: curl -sSL ${{ github.event.pull_request.diff_url }} > diff.patch
+      - name: Build policy prompt
+        run: >
+          npx ts-node scripts/build-policy-prompt.ts
+          --template policy/main_prompt.md
+          --diff diff.patch
+          --output codex-prompt.md
       - name: Run AI Policy Check
         id: ai
-        uses: openai/openai-composite-action@v1
+        uses: openai/codex-action@v1
         with:
-          model: gpt-4o-mini
-          prompt-file: policy/main_prompt.md
-          input-file: diff.patch
+          prompt-file: codex-prompt.md
           output-file: result.json
+          model: gpt-4o-mini
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
       - name: Comment on PR
         run: npx ts-node scripts/parse-result.ts result.json

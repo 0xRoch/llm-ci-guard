@@ -1,11 +1,11 @@
 # AI Policy Check
 
-This repository demonstrates an automated pull request policy review powered by the OpenAI composite GitHub Action and a TypeScript helper script. It simulates a lightweight Node.js + TypeScript service with opinionated code review rules enforced by an AI assistant.
+This repository demonstrates an automated pull request policy review powered by the OpenAI Codex GitHub Action and a TypeScript helper script. It simulates a lightweight Node.js + TypeScript service with opinionated code review rules enforced by an AI assistant.
 
 ## How it works
 
 - Policy rules live in `policy/rules/*.md` and are concatenated into the `policy/main_prompt.md` prompt file that is sent to the model.
-- The workflow `.github/workflows/ai-policy-check.yml` downloads the pull request diff, calls `openai/openai-composite-action@v1` with `gpt-4o-mini`, and stores the response in `result.json`.
+- The workflow `.github/workflows/ai-policy-check.yml` downloads the pull request diff, renders the prompt via `scripts/build-policy-prompt.ts`, runs `openai/codex-action@v1` with `gpt-4o-mini` (using `OPENAI_API_KEY`), and stores the response in `result.json`.
 - `scripts/parse-result.ts` parses the model output, posts one comment per violation via Octokit, and fails the job if the violation refers to a critical rule (IDs 1 or 2).
 
 ## Policy catalog
