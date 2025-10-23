@@ -7,10 +7,11 @@
     "parse-result": "ts-node scripts/parse-result.ts"
   },
   "dependencies": {
-    "@octokit/rest": "file:vendor/octokit-rest"
+    "@octokit/rest": "^20.1.1"
   },
   "devDependencies": {
-    "ts-node": "file:vendor/ts-node",
-    "typescript": "file:vendor/typescript"
+    "@types/node": "^20.14.9",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
   }
 }

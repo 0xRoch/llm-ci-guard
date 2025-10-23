@@ -1,26 +1,26 @@
-const { readFileSync } = require("fs");
-const { Octokit } = require("@octokit/rest");
+import { readFileSync } from "fs";
+import { Octokit } from "@octokit/rest";
 
-/**
- * @typedef {Object} Violation
- * @property {number | string} rule
- * @property {string} file
- * @property {string} comment
- * @property {number} [line]
- */
+interface Violation {
+  rule: number | string;
+  file: string;
+  comment?: string;
+  line?: number;
+}
 
-async function main() {
+async function main(): Promise<void> {
   const [, , resultPath] = process.argv;
+
   if (!resultPath) {
     console.error("Missing result path argument.");
     process.exit(1);
+    return;
   }
 
   const raw = readFileSync(resultPath, "utf8");
-  const parsed = JSON.parse(raw);
-  /** @type {Violation[]} */
-  const violations = Array.isArray(parsed?.violations)
-    ? parsed.violations
+  const parsed = JSON.parse(raw) as { violations?: unknown };
+  const violations: Violation[] = Array.isArray(parsed?.violations)
+    ? (parsed.violations as Violation[])
     : [];
 
   if (violations.length === 0) {
@@ -33,13 +33,14 @@ async function main() {
   const [owner, repo] = repository.split("/");
   const eventPath = process.env.GITHUB_EVENT_PATH;
   const event = eventPath
-    ? JSON.parse(readFileSync(eventPath, "utf8"))
+    ? (JSON.parse(readFileSync(eventPath, "utf8")) as {
+        pull_request?: { number?: number };
+        number?: number;
+      })
     : undefined;
   const pullNumber = event?.pull_request?.number ?? event?.number;
 
-  const octokit = token
-    ? new Octokit({ auth: token })
-    : undefined;
+  const octokit = token ? new Octokit({ auth: token }) : undefined;
 
   if (!octokit) {
     console.warn("GITHUB_TOKEN not set. Running in dry-run mode without PR comments.");
@@ -47,7 +48,7 @@ async function main() {
 
   if (!owner || !repo || !pullNumber) {
     console.warn(
-      "Missing repository or pull request context. Comments will not be posted." 
+      "Missing repository or pull request context. Comments will not be posted."
     );
   }
 
@@ -64,7 +65,7 @@ async function main() {
       `File: ${violation.file}`,
       violation.line ? `Line: ${violation.line}` : undefined,
       violation.comment ? `Details: ${violation.comment}` : undefined,
-    ].filter(Boolean);
+    ].filter(Boolean) as string[];
 
     const body = bodyLines.join("\n");
 
@@ -84,12 +85,13 @@ async function main() {
   if (hasCriticalViolation) {
     console.error("Critical policy violations detected. Failing workflow.");
     process.exit(1);
+    return;
   }
 
   console.log("Policy violations detected but none were critical.");
 }
 
-main().catch((error) => {
+void main().catch((error) => {
   console.error("Failed to parse policy result:", error);
   process.exit(1);
 });
