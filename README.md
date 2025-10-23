@@ -59,6 +59,9 @@ npm run build
 npx ts-node scripts/parse-result.ts path/to/result.json
 ```
 
+> **Tip:** The scripts have been tested with Node.js 20. If you encounter toolchain errors, double-check that you're running a
+> recent LTS release before troubleshooting further.
+
 `parse-result.ts` can run locally using `GITHUB_TOKEN`, `GITHUB_REPOSITORY`, and `GITHUB_EVENT_PATH` environment variables to emulate the GitHub Actions context. Without them it prints the violations to stdout.
 
 The project depends on the standard `@octokit/rest`, `ts-node`, and `typescript` packages from the public npm registry.
