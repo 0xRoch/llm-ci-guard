@@ -18,7 +18,7 @@ async function main(): Promise<void> {
   }
 
   const raw = readFileSync(resultPath, "utf8");
-  const parsed = JSON.parse(raw) as { violations?: unknown };
+  const parsed = parseResult(raw);
   const violations: Violation[] = Array.isArray(parsed?.violations)
     ? (parsed.violations as Violation[])
     : [];
@@ -95,3 +95,94 @@ void main().catch((error) => {
   console.error("Failed to parse policy result:", error);
   process.exit(1);
 });
+
+function parseResult(raw: string): { violations?: unknown } {
+  const direct = tryParseJson(raw);
+  if (direct) {
+    return direct;
+  }
+
+  const extracted =
+    extractJsonFromFence(raw) ?? extractFirstJsonObject(raw) ?? raw.trim();
+
+  const fallback = tryParseJson(extracted);
+  if (fallback) {
+    console.warn("Policy result contained extra text. Parsed JSON payload.");
+    return fallback;
+  }
+
+  throw new Error("Unable to extract JSON payload from policy result.");
+}
+
+function tryParseJson<T>(input: string): T | undefined {
+  try {
+    return JSON.parse(input) as T;
+  } catch {
+    return undefined;
+  }
+}
+
+function extractJsonFromFence(raw: string): string | undefined {
+  const match = /```(?:json)?\s*([\s\S]*?)```/i.exec(raw);
+  return match ? match[1].trim() : undefined;
+}
+
+function extractFirstJsonObject(raw: string): string | undefined {
+  const startIndex = findFirstJsonStart(raw);
+  if (startIndex === -1) {
+    return undefined;
+  }
+
+  const closingIndex = findMatchingEnd(raw, startIndex);
+  if (closingIndex === -1) {
+    return undefined;
+  }
+
+  return raw.slice(startIndex, closingIndex + 1);
+}
+
+function findFirstJsonStart(raw: string): number {
+  for (let index = 0; index < raw.length; index += 1) {
+    const char = raw[index];
+    if (char === "{" || char === "[") {
+      return index;
+    }
+  }
+  return -1;
+}
+
+function findMatchingEnd(raw: string, startIndex: number): number {
+  const startChar = raw[startIndex];
+  const endChar = startChar === "{" ? "}" : "]";
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+
+  for (let index = startIndex; index < raw.length; index += 1) {
+    const char = raw[index];
+
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (char === "\\") {
+        escaped = true;
+      } else if (char === '"') {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (char === '"') {
+      inString = true;
+    } else if (char === startChar) {
+      depth += 1;
+    } else if (char === endChar) {
+      depth -= 1;
+      if (depth === 0) {
+        return index;
+      }
+    }
+  }
+
+  return -1;
+}
