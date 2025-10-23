@@ -1,0 +1,22 @@
+name: AI Policy Check
+on: [pull_request]
+jobs:
+  policy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get diff
+        run: curl -sSL ${{ github.event.pull_request.diff_url }} > diff.patch
+      - name: Run AI Policy Check
+        id: ai
+        uses: openai/openai-composite-action@v1
+        with:
+          model: gpt-4o-mini
+          prompt-file: policy/main_prompt.md
+          input-file: diff.patch
+          output-file: result.json
+      - name: Comment on PR
+        run: npx ts-node scripts/parse-result.ts result.json
