@@ -13,6 +13,7 @@ export async function listUsersController(_req: Request, res: Response) {
   try {
     const users = await listUsers();
     logger.info("Listing users from the controller");
+    console.log("Users fetched", users);
     res.json({ users });
   } catch (error) {
     logger.error("Failed to list users", {
